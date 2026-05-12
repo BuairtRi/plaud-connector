@@ -100,7 +100,7 @@ export class PlaudAuth implements IPlaudAuth {
   private decodeJwtExpiry(jwt: string): { iat: number; exp: number } {
     const parts = jwt.split('.');
     if (parts.length !== 3) throw new Error('Invalid JWT');
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    const payload = JSON.parse(Buffer.from(parts[1]!, 'base64url').toString());
     return { iat: payload.iat ?? 0, exp: payload.exp ?? 0 };
   }
 }

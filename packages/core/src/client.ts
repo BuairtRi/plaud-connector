@@ -39,7 +39,7 @@ export class PlaudClient {
   }
 
   private get baseUrl(): string {
-    return BASE_URLS[this.region] ?? BASE_URLS['us'];
+    return BASE_URLS[this.region] ?? BASE_URLS.us ?? 'https://api.plaud.ai';
   }
 
   /** Low-level JSON API. GET has no body; POST/PATCH send JSON. */
@@ -283,8 +283,8 @@ export class PlaudClient {
    * (Does not load S3 summary JSON; only what Plaud puts on file detail — same source as in the web app structure.)
    */
   async listUsedTemplates(options: {
-    scope?: 'live' | 'trash' | 'all';
-    requestDelayMs?: number;
+    scope?: 'live' | 'trash' | 'all' | undefined;
+    requestDelayMs?: number | undefined;
   } = {}): Promise<PlaudListUsedTemplatesResult> {
     const scope = options.scope ?? 'live';
     const delay = options.requestDelayMs ?? 0;
@@ -414,7 +414,7 @@ export class PlaudClient {
     /** Merged on top of the built object (rare; prefer `content_config`). */
     extra?: Record<string, unknown>;
     body?: Record<string, unknown>;
-    timezone?: string;
+    timezone?: string | undefined;
   }): Promise<Record<string, unknown>> {
     const h: Record<string, string> = {};
     if (args.timezone) h['timezone'] = args.timezone;
@@ -530,7 +530,7 @@ export class PlaudClient {
         notes: noteIds,
         ...options?.content_config,
       },
-      timezone: options?.timezone,
+      ...(options?.timezone !== undefined ? { timezone: options.timezone } : {}),
     });
   }
 
@@ -631,7 +631,7 @@ export class PlaudClient {
     if (format === 'srt') {
       const lines: string[] = [];
       for (let i = 0; i < segments.length; i++) {
-        const seg = segments[i];
+        const seg = segments[i]!;
         lines.push(String(i + 1));
         lines.push(`${this.formatSrtTime(seg.start_time)} --> ${this.formatSrtTime(seg.end_time)}`);
         const prefix = includeSpeakers && seg.speaker ? `${seg.speaker}: ` : '';
