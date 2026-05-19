@@ -53,6 +53,13 @@ export class PlaudClient {
       Authorization: `Bearer ${token}`,
       'edit-from': 'web',
       'app-platform': 'web',
+      // Plaud sits behind Cloudflare, which 403s non-browser User-Agents
+      // (Bun/Node default UAs trigger the bot-fight challenge). Mimic the
+      // web.plaud.ai SPA so the edge passes the request through to the API.
+      'User-Agent':
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      Origin: 'https://web.plaud.ai',
+      Referer: 'https://web.plaud.ai/',
       ...init.headers,
     };
     if (init.body !== undefined) {
@@ -657,7 +664,14 @@ export class PlaudClient {
   async downloadAudio(id: string): Promise<ArrayBuffer> {
     const token = await this.auth.getToken();
     const res = await fetch(`${this.baseUrl}/file/download/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Same Cloudflare bypass as request() — see comment there.
+        'User-Agent':
+          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        Origin: 'https://web.plaud.ai',
+        Referer: 'https://web.plaud.ai/',
+      },
     });
     if (!res.ok) throw new Error(`Download failed: ${res.status}`);
     return res.arrayBuffer();
